@@ -14,6 +14,25 @@ def mark_attendance(current_user: dict = Depends(get_current_user)):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
+
+    # --- (US-14 ) ---
+    # Check if the employee has an APPROVED leave for today
+    leave_query = """
+        SELECT id FROM leaves 
+        WHERE employee_id = %s 
+        AND status = 'approved' 
+        AND %s BETWEEN start_date AND end_date
+    """
+    cursor.execute(leave_query, (employee_id, today))
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        raise HTTPException(
+            status_code=400, 
+            detail="You are currently on an approved leave. Attendance marking is disabled."
+        )
+    # --------------------------------------------
+
     cursor.execute(
         "SELECT id FROM attendance WHERE employee_id = %s AND date = %s",
         (employee_id, today)

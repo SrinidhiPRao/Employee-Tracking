@@ -96,7 +96,22 @@ def setup_database():
           INSERT INTO attendance_logs (attendance_id, action_type)
             VALUES (NEW.id, 'INSERT');
             END;
-             """
+             """,
+
+        # US-13: Monthly Attendance View
+        """
+        CREATE OR REPLACE VIEW monthly_attendance_report AS
+        SELECT 
+            e.id AS employee_id,
+            e.name AS employee_name,
+            MONTH(a.date) AS month,
+            YEAR(a.date) AS year,
+            COUNT(a.id) AS total_days_present
+        FROM employees e
+        JOIN attendance a ON e.id = a.employee_id
+        WHERE a.status = 'present'
+        GROUP BY e.id, e.name, MONTH(a.date), YEAR(a.date);
+        """
         ]
 
         for query in queries:
