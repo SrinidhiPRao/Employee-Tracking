@@ -9,6 +9,7 @@ def get_connection(include_db=True):
     """Connects to MySQL. set include_db=False to connect to the server only."""
     return mysql.connector.connect(
         host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT", 3306)),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         database=os.getenv("DB_NAME") if include_db else None

@@ -8,8 +8,11 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
 
+// In development: Vite proxy forwards /api/* to localhost:8000
+// In production:  set VITE_API_URL to your Azure App Service URL
+//   e.g. VITE_API_URL=https://your-app.azurewebsites.net
 const api = axios.create({
-  baseURL: '/api', // proxied to http://localhost:8000 by Vite (see vite.config.ts)
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
 })
 
 // Attach the Bearer token before every request
