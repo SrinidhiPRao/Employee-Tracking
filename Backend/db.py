@@ -1,9 +1,9 @@
 import mysql.connector
 from mysql.connector import Error
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 def get_connection(include_db=True):
     """Connects to MySQL. set include_db=False to connect to the server only."""
@@ -15,6 +15,8 @@ def get_connection(include_db=True):
     )
 
 def setup_database():
+    conn = None
+    cursor = None
     try:
         # Connect to the MySQL server (not the DB) to create the DB first
         conn = get_connection(include_db=False)
@@ -136,8 +138,9 @@ def setup_database():
     except Error as e:
         print(f"Error: {e}")
     finally:
-        if conn.is_connected():
-            cursor.close()
+        if conn is not None and conn.is_connected():
+            if cursor is not None:
+                cursor.close()
             conn.close()
 
 if __name__ == "__main__":

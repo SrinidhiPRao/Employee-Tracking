@@ -9,6 +9,25 @@ from fastapi.responses import StreamingResponse
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 
+# US-06 / US-11: Get all employees — used by HR to pick an employee
+# in the payroll calculator and overtime report pages.
+@router.get("/employees")
+def get_all_employees(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") not in ("hr", "admin"):
+        raise HTTPException(status_code=403, detail="Access denied. HR or Admin only.")
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT id, name, department, role FROM employees ORDER BY name"
+    )
+    employees = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return {"total": len(employees), "employees": employees}
+
+
 @router.get("/department")
 def get_all_departments(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") not in ("hr", "admin"):
