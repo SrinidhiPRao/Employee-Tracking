@@ -8,3 +8,15 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Environment files — contain secrets, never push these
+.env
+*.env
+
+# Frontend build output and dependencies
+Frontend/node_modules/
+Frontend/dist/
+
+# IDE
+.vscode/
+.idea/

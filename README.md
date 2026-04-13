@@ -1,47 +1,35 @@
-# Employee Tracking - HRMS Backend
+# Employee Tracking System (EMS)
 
-A FastAPI-based Human Resource Management System (HRMS) backend with JWT authentication, attendance tracking, leave management, and payroll calculation.
+A full-stack HR management system built with **FastAPI** (backend) and **React + TypeScript** (frontend).
 
 ---
 
-## Project Structure
+## Features
 
-```
-Employee_Tracking/
-├── .env                   # Environment variables (not committed)
-├── .gitignore
-├── .python-version        # Python 3.12
-├── pyproject.toml         # Project dependencies
-├── README.md
-└── Backend/
-    ├── main.py            # FastAPI app entry point
-    ├── db.py              # MySQL connection helper
-    ├── auth/
-    │   ├── router.py      # Signup & login endpoints
-    │   ├── schemas.py     # Pydantic models for auth
-    │   └── utils.py       # JWT & bcrypt helpers
-    ├── attendance/
-    │   ├── router.py      # Attendance mark endpoint
-    │   └── schemas.py
-    ├── leave/
-    │   ├── router.py      # Leave apply, view, approve/reject
-    │   └── schemas.py
-    └── payroll/
-        ├── router.py      # Payroll calculate & view
-        └── schemas.py
-```
+- Employee login with JWT authentication
+- Daily attendance — check-in and check-out
+- Late mark detection and overtime calculation
+- Leave management — apply, approve, reject
+- Payroll calculation with salary slips
+- Department reports and monthly attendance summaries
+- CSV export for reports
+- Role-based access — Employee, Manager, HR, Admin
 
 ---
 
 ## Prerequisites
 
-- Python 3.12
-- MySQL server running locally (or accessible remotely)
-- [`uv`](https://github.com/astral-sh/uv) package manager (recommended) **or** `pip`
+Make sure the following are installed before you start:
+
+| Tool | Version |
+|---|---|
+| Python | 3.12+ |
+| MySQL | 8.0+ |
+| Node.js | 18+ |
 
 ---
 
-## Setup
+## Getting Started
 
 ### 1. Clone the repository
 
@@ -50,235 +38,131 @@ git clone <repo-url>
 cd Employee_Tracking
 ```
 
-### 2. Create the MySQL database and tables
+### 2. Set up environment variables
 
-Connect to your MySQL server and run the following SQL:
-
-```sql
-CREATE DATABASE hrms;
-USE hrms;
-
-CREATE TABLE employees (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('employee', 'manager', 'hr', 'admin') DEFAULT 'employee',
-    department VARCHAR(100),
-    salary DECIMAL(10, 2) DEFAULT 0.00
-);
-
-CREATE TABLE attendance (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id INT NOT NULL,
-    date DATE NOT NULL,
-    check_in DATETIME,
-    status VARCHAR(20) DEFAULT 'present',
-    FOREIGN KEY (employee_id) REFERENCES employees(id)
-);
-
-CREATE TABLE leaves (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id INT NOT NULL,
-    leave_type VARCHAR(50),
-    start_date DATE,
-    end_date DATE,
-    reason TEXT,
-    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (employee_id) REFERENCES employees(id)
-);
-
-CREATE TABLE payroll (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id INT NOT NULL,
-    month INT NOT NULL,
-    year INT NOT NULL,
-    basic_salary DECIMAL(10, 2),
-    deductions DECIMAL(10, 2),
-    net_salary DECIMAL(10, 2),
-    FOREIGN KEY (employee_id) REFERENCES employees(id)
-);
+```bash
+cp .env.example .env
 ```
 
-### 3. Configure environment variables
+Open `.env` and fill in your MySQL credentials:
 
-Copy the example below and save it as `.env` in the project root (`Employee_Tracking/.env`):
-
-```env
+```
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_mysql_password
 DB_NAME=hrms
-SECRET_KEY=your_secret_key_here
+SECRET_KEY=any_long_random_string
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
-> **Note:** Never commit your `.env` file. It is already in `.gitignore`.
+> **Tables are created automatically** when the backend starts for the first time — you do not need to write any SQL manually.
 
-### 4. Install dependencies
-
-Using `uv` (recommended):
-
-```bash
-uv sync
-```
-
-Using `pip`:
+### 3. Install Python dependencies
 
 ```bash
 pip install -r requirements.txt
-# or install manually:
-pip install fastapi uvicorn mysql-connector-python pyjwt bcrypt python-dotenv
 ```
 
-### 5. Run the server
+### 4. Start the backend
+
+Make sure MySQL is running, then:
 
 ```bash
 cd Backend
 uvicorn main:app --reload
 ```
 
-The API will be available at `http://127.0.0.1:8000`.
+Backend runs at: `http://localhost:8000`
+Swagger API docs: `http://localhost:8000/docs`
 
-Interactive docs (Swagger UI): `http://127.0.0.1:8000/docs`
+### 5. Install and start the frontend
+
+Open a **new terminal**:
+
+```bash
+cd Frontend
+npm install
+npm run dev
+```
+
+Frontend runs at: `http://localhost:5173`
 
 ---
 
-## Authentication
-
-The API uses **JWT Bearer tokens**. After login, include the token in all protected requests:
+## Project Structure
 
 ```
-Authorization: Bearer <your_token>
-```
-
----
-
-## API Endpoints
-
-### Auth
-
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/auth/signup` | Public | Register a new employee |
-| POST | `/auth/login` | Public | Login and get JWT token |
-
-**Signup request body:**
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "secret123",
-  "role": "employee",
-  "department": "Engineering"
-}
-```
-> `role` defaults to `"employee"`. Valid values: `employee`, `manager`, `hr`, `admin`.
-
-**Login request body:**
-```json
-{
-  "email": "john@example.com",
-  "password": "secret123"
-}
-```
-
-**Login response:**
-```json
-{
-  "access_token": "<jwt_token>",
-  "token_type": "bearer",
-  "role": "employee",
-  "name": "John Doe"
-}
+Employee_Tracking/
+├── Backend/
+│   ├── main.py            # FastAPI entry point
+│   ├── db.py              # DB connection + auto table/view setup
+│   ├── auth/              # Login, signup, JWT
+│   ├── attendance/        # Check-in, checkout, late marks, overtime
+│   ├── leave/             # Apply, approve, reject leaves
+│   ├── payroll/           # Salary calculation
+│   └── reports/           # Department reports, CSV export
+│
+├── Frontend/
+│   └── src/
+│       ├── api/           # Axios API calls
+│       ├── pages/         # All pages
+│       ├── components/    # Navbar, Sidebar, Layout
+│       ├── store/         # Auth state (Zustand)
+│       ├── types/         # TypeScript types
+│       └── utils/         # Shared helpers
+│
+├── Dockerfile             # Single Dockerfile — builds and runs everything
+├── .env.example           # Template for environment variables
+└── requirements.txt       # Python dependencies
 ```
 
 ---
 
-### Attendance
+## Roles & Access
 
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/attendance/mark` | Any logged-in user | Mark today's attendance (once per day) |
-
-Returns `400` if attendance is already marked for the day.
-
----
-
-### Leave
-
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/leave/apply` | Any logged-in user | Apply for a leave |
-| GET | `/leave/my-leaves` | Any logged-in user | View own leave history |
-| GET | `/leave/all-leaves` | manager / hr / admin | View all employees' leaves |
-| PUT | `/leave/{leave_id}/status` | manager / hr / admin | Approve or reject a leave |
-
-**Apply leave request body:**
-```json
-{
-  "leave_type": "sick",
-  "start_date": "2026-04-15",
-  "end_date": "2026-04-17",
-  "reason": "Fever"
-}
-```
-
-**Update leave status request body:**
-```json
-{
-  "status": "approved"
-}
-```
-> Valid values: `approved`, `rejected`.
+| Role | Access |
+|---|---|
+| **Employee** | Mark attendance, apply leave, view own payroll & salary slip |
+| **Manager** | Everything above + approve/reject leave requests |
+| **HR** | Everything above + payroll manager, overtime report, department reports, CSV export |
+| **Admin** | Full access to everything |
 
 ---
 
-### Payroll
+## Docker Deployment
 
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/payroll/calculate` | hr / admin | Calculate payroll for an employee for a given month |
-| GET | `/payroll/my-payroll` | Any logged-in user | View own payroll records |
+Build and run the entire app (frontend + backend) in a single container:
 
-**Calculate payroll request body:**
-```json
-{
-  "employee_id": 1,
-  "month": 4,
-  "year": 2026
-}
+```bash
+# Build
+docker build -t employee-tracking .
+
+# Run — pass your DB credentials as environment variables
+docker run -p 80:80 \
+  -e DB_HOST=your-db-host \
+  -e DB_USER=root \
+  -e DB_PASSWORD=your-password \
+  -e DB_NAME=hrms \
+  -e SECRET_KEY=your-secret \
+  -e ALGORITHM=HS256 \
+  -e ACCESS_TOKEN_EXPIRE_MINUTES=60 \
+  employee-tracking
 ```
 
-Payroll is calculated as:
-```
-deduction = (base_salary / total_days_in_month) * days_absent
-net_salary = base_salary - deduction
-```
-
-> The employee's `salary` field must be set in the `employees` table before calculating payroll.
-
----
-
-## Role Summary
-
-| Role | Capabilities |
-|------|-------------|
-| `employee` | Mark attendance, apply leave, view own leaves & payroll |
-| `manager` | All of employee + view all leaves, approve/reject leaves |
-| `hr` | All of manager + calculate payroll |
-| `admin` | Full access |
+App runs at: `http://localhost`
 
 ---
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Framework | FastAPI |
-| Database | MySQL |
-| Auth | JWT (PyJWT) + bcrypt |
-| Python | 3.12 |
-| Package Manager | uv |
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI, Python 3.12 |
+| Frontend | React 19, TypeScript, Vite |
+| Styling | Tailwind CSS |
+| Database | MySQL 8 |
+| Auth | JWT (PyJWT + bcrypt) |
+| State | Zustand |
+| Charts | Recharts |
+| Container | Docker + nginx + supervisord |
